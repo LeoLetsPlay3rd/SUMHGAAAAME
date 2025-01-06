@@ -1,71 +1,96 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float moveSpeed = 5.0f; // Walking speed
-    public float jumpForce = 5.0f; // Jumping force
-    public float gravity = -9.81f; // Gravity applied to the player
+    public float moveSpeed = 5.0f;
+    public float gravity = -9.81f;
 
-    [Header("Mouse Settings")]
-    public float mouseSensitivity = 100f; // Controls mouse sensitivity
+    [Header("Mouse/Controller Settings")]
+    public float sensitivity = 100f;
 
     [Header("References")]
-    public CharacterController controller; // Reference to the CharacterController
-    public Transform cameraTransform; // Reference to the camera transform
+    public CharacterController controller;
+    public Transform cameraTransform;
 
-    private Vector3 velocity; // Tracks the player's vertical velocity
-    private float xRotation = 0f; // Tracks the vertical rotation of the camera
+    private Vector3 velocity;
+    private float xRotation = 0f;
+
+    private Vector2 moveInput;
+    private Vector2 lookInput;
 
     void Start()
     {
-        // Lock the cursor to the center of the screen
         Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()
     {
-        HandleMouseLook();
+        HandleLook();
         HandleMovement();
+        HandleInteraction(); // Check for interactions each frame
     }
 
-    void HandleMouseLook()
+    public void OnMove(InputValue value)
     {
-        // Get mouse input
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        moveInput = value.Get<Vector2>();
+    }
 
-        // Rotate the player body horizontally
+    public void OnLook(InputValue value)
+    {
+        lookInput = value.Get<Vector2>();
+    }
+
+    // Handles camera movement
+    void HandleLook()
+    {
+        float mouseX = lookInput.x * sensitivity * Time.deltaTime;
+        float mouseY = lookInput.y * sensitivity * Time.deltaTime;
+
         transform.Rotate(Vector3.up * mouseX);
-
-        // Rotate the camera vertically, clamping to avoid looking too far up or down
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f); // Limits vertical rotation
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
         cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
+    // Handles player movement and gravity
     void HandleMovement()
     {
-        // Get input for movement
-        float moveX = Input.GetAxis("Horizontal"); // A/D or Left/Right keys
-        float moveZ = Input.GetAxis("Vertical"); // W/S or Up/Down keys
-
-        // Move relative to the player's current direction
-        Vector3 move = transform.right * moveX + transform.forward * moveZ;
+        Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         controller.Move(move * moveSpeed * Time.deltaTime);
 
-        // Apply gravity
         if (controller.isGrounded && velocity.y < 0)
         {
-            velocity.y = -2f; // Keep the player grounded
+            velocity.y = -2f;
         }
+
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
 
-        // Jumping
-        if (Input.GetButtonDown("Jump") && controller.isGrounded)
+    // Handles interaction logic
+    void HandleInteraction()
+    {
+        // Check for keyboard input
+        if (Input.GetKeyDown(KeyCode.X))
         {
-            velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
+            Debug.Log("Interacted with Keyboard X!");
+            Interact();
         }
+
+        // Check for PS5 controller input
+        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
+        {
+            Debug.Log("Interacted with PS5 Controller X (Button South)!");
+            Interact();
+        }
+    }
+
+    // Interaction logic
+    void Interact()
+    {
+        // Replace this with your game's interaction logic
+        Debug.Log("Performing interaction...");
     }
 }

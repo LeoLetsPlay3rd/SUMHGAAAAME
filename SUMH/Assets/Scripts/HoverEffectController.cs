@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem; // Import InputSystem namespace for Gamepad support
 
 public class HoverEffectController : MonoBehaviour
 {
@@ -29,6 +30,7 @@ public class HoverEffectController : MonoBehaviour
 
     void Update()
     {
+        // Cast a ray from the center of the screen
         Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
         RaycastHit hit;
 
@@ -38,12 +40,14 @@ public class HoverEffectController : MonoBehaviour
 
             if (hit.collider.CompareTag("Interactable"))
             {
-                if (Input.GetKeyDown(KeyCode.X))
+                Interactable interactable = hit.collider.GetComponent<Interactable>();
+
+                if (interactable != null)
                 {
-                    Debug.Log("X pressed while hovering over " + hit.collider.gameObject.name);
-                    Interactable interactable = hit.collider.GetComponent<Interactable>();
-                    if (interactable != null)
+                    // Check for interaction via keyboard or controller
+                    if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
                     {
+                        Debug.Log("Interaction triggered with " + hit.collider.gameObject.name);
                         interactable.Interact();
                     }
                 }
