@@ -1,7 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro; // For TextMeshPro UI
 using System.Collections;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,6 +18,11 @@ public class GameManager : MonoBehaviour
     public float fadeDuration = 1f; // Duration for fade effect
 
     private Image fadeImage; // Reference to the fade UI image
+
+    [Header("Confirmation UI")]
+    public GameObject confirmationUI; // UI Canvas/GameObject for confirmation
+    public TMP_Text confirmationText; // TextMeshPro text for the confirmation message
+    private bool isAwaitingConfirmation = false; // Tracks if the confirmation is active
 
     private void Awake()
     {
@@ -69,12 +76,12 @@ public class GameManager : MonoBehaviour
 
             Debug.Log($"Total interactions: {totalObjectsInteracted} / {objectInteractions.Length}");
 
-            // If all objects are interacted with, save position and transition scenes
+            // If all objects are interacted with, save position and show confirmation UI
             if (totalObjectsInteracted == objectInteractions.Length)
             {
-                Debug.Log("All objects interacted with! Saving player position and switching scenes...");
+                Debug.Log("All objects interacted with! Saving player position...");
                 SavePlayerState(GameObject.FindWithTag("Player")); // Save player position and rotation
-                StartCoroutine(TransitionToNextScene(SceneManager.GetActiveScene().buildIndex + 1));
+                ShowConfirmationUI(); // Show confirmation UI
             }
         }
         else
@@ -95,6 +102,36 @@ public class GameManager : MonoBehaviour
         player.transform.position = playerPosition;
         player.transform.rotation = playerRotation;
         Debug.Log($"Player state restored. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
+    }
+
+    private void ShowConfirmationUI()
+    {
+        if (confirmationUI != null)
+        {
+            confirmationUI.SetActive(true);
+            confirmationText.text = "Do you want to move forward? Press 'O' to confirm."; // Update message as needed
+            isAwaitingConfirmation = true;
+        }
+    }
+
+    private void HideConfirmationUI()
+    {
+        if (confirmationUI != null)
+        {
+            confirmationUI.SetActive(false);
+            isAwaitingConfirmation = false;
+        }
+    }
+
+    private void Update()
+    {
+        // Handle confirmation input
+        if (isAwaitingConfirmation && (Input.GetKeyDown(KeyCode.O) || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)))
+        {
+            Debug.Log("Player confirmed scene transition.");
+            HideConfirmationUI();
+            StartCoroutine(TransitionToNextScene(SceneManager.GetActiveScene().buildIndex + 1));
+        }
     }
 
     // Transition to the next scene with a fade effect
