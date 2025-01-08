@@ -14,6 +14,10 @@ public class PlayerController : MonoBehaviour
     public CharacterController controller;
     public Transform cameraTransform;
 
+    [Header("Interaction Settings")]
+    public float interactionRange = 3.0f; // Range for interaction detection
+    public LayerMask interactableLayer; // Layer for interactable objects
+
     private Vector3 velocity;
     private float xRotation = 0f;
 
@@ -72,25 +76,37 @@ public class PlayerController : MonoBehaviour
     // Handles interaction logic
     void HandleInteraction()
     {
-        // Check for keyboard input
-        if (Input.GetKeyDown(KeyCode.X))
+        // Check for interaction input (keyboard or gamepad)
+        if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
         {
-            Debug.Log("Interacted with Keyboard X!");
-            Interact();
-        }
-
-        // Check for PS5 controller input
-        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
-        {
-            Debug.Log("Interacted with PS5 Controller X (Button South)!");
-            Interact();
+            Debug.Log("Attempting interaction...");
+            PerformRaycastInteraction();
         }
     }
 
-    // Interaction logic
-    void Interact()
+    // Performs raycast to detect interactable objects
+    void PerformRaycastInteraction()
     {
-        // Replace this with your game's interaction logic
-        Debug.Log("Performing interaction...");
+        RaycastHit hit;
+        Vector3 rayOrigin = cameraTransform.position;
+        Vector3 rayDirection = cameraTransform.forward;
+
+        if (Physics.Raycast(rayOrigin, rayDirection, out hit, interactionRange, interactableLayer))
+        {
+            InteractableObject interactable = hit.collider.GetComponent<InteractableObject>();
+            if (interactable != null)
+            {
+                interactable.OnInteract();
+                Debug.Log($"Interacted with: {hit.collider.name}");
+            }
+            else
+            {
+                Debug.Log("Hit object is not interactable.");
+            }
+        }
+        else
+        {
+            Debug.Log("No interactable object in range.");
+        }
     }
 }
