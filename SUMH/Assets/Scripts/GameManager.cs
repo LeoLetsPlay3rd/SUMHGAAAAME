@@ -20,9 +20,11 @@ public class GameManager : MonoBehaviour
     private Image fadeImage; // Reference to the fade UI image
 
     [Header("Confirmation UI")]
-    public GameObject confirmationUI; // UI Canvas/GameObject for confirmation
-    public TMP_Text confirmationText; // TextMeshPro text for the confirmation message
+    private GameObject moveForwardUI; // UI Canvas/GameObject for confirmation
+    private TMP_Text moveForwardText; // TextMeshPro text for the confirmation message
     private bool isAwaitingConfirmation = false; // Tracks if the confirmation is active
+
+    private bool isFirstScene = true; // Tracks if the player is in the first scene
 
     private void Awake()
     {
@@ -42,6 +44,28 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        LocateSceneElements(); // Locate UI elements like fade image and MoveForwardUI
+
+        // Initialize the objectInteractions array if not set
+        if (objectInteractions == null || objectInteractions.Length == 0)
+        {
+            Debug.LogWarning("Object interactions array not set! Initializing with 5 default slots.");
+            objectInteractions = new bool[5]; // Default to 5 interactable objects
+        }
+
+        // Check if this is the first scene
+        if (SceneManager.GetActiveScene().name == "D_Phase_1")
+        {
+            isFirstScene = true;
+        }
+        else
+        {
+            isFirstScene = false;
+        }
+    }
+
+    private void LocateSceneElements()
+    {
         // Locate the FadeImage in the scene by its tag
         fadeImage = GameObject.FindWithTag("FadeImage")?.GetComponent<Image>();
 
@@ -55,11 +79,16 @@ public class GameManager : MonoBehaviour
             StartCoroutine(FadeIn());
         }
 
-        // Initialize the objectInteractions array if not set
-        if (objectInteractions == null || objectInteractions.Length == 0)
+        // Locate the MoveForwardUI in the scene by its tag
+        moveForwardUI = GameObject.FindWithTag("MoveForwardUI");
+        if (moveForwardUI != null)
         {
-            Debug.LogWarning("Object interactions array not set! Initializing with 5 default slots.");
-            objectInteractions = new bool[5]; // Default to 5 interactable objects
+            moveForwardText = moveForwardUI.GetComponentInChildren<TMP_Text>();
+            moveForwardUI.SetActive(false); // Hide it initially
+        }
+        else
+        {
+            Debug.LogWarning("MoveForwardUI not found in the scene. Ensure a GameObject with the 'MoveForwardUI' tag exists.");
         }
     }
 
@@ -76,12 +105,12 @@ public class GameManager : MonoBehaviour
 
             Debug.Log($"Total interactions: {totalObjectsInteracted} / {objectInteractions.Length}");
 
-            // If all objects are interacted with, save position and show confirmation UI
+            // If all objects are interacted with, save position and show MoveForwardUI
             if (totalObjectsInteracted == objectInteractions.Length)
             {
                 Debug.Log("All objects interacted with! Saving player position...");
                 SavePlayerState(GameObject.FindWithTag("Player")); // Save player position and rotation
-                ShowConfirmationUI(); // Show confirmation UI
+                ShowMoveForwardUI(); // Show MoveForwardUI
             }
         }
         else
@@ -99,26 +128,33 @@ public class GameManager : MonoBehaviour
 
     public void RestorePlayerState(GameObject player)
     {
-        player.transform.position = playerPosition;
-        player.transform.rotation = playerRotation;
-        Debug.Log($"Player state restored. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
+        if (!isFirstScene) // Only restore position and rotation if not in the first scene
+        {
+            player.transform.position = playerPosition;
+            player.transform.rotation = playerRotation;
+            Debug.Log($"Player state restored. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
+        }
+        else
+        {
+            Debug.Log("Player position not restored because this is the first scene.");
+        }
     }
 
-    private void ShowConfirmationUI()
+    private void ShowMoveForwardUI()
     {
-        if (confirmationUI != null)
+        if (moveForwardUI != null)
         {
-            confirmationUI.SetActive(true);
-            confirmationText.text = "Do you want to move forward? Press 'O' to confirm."; // Update message as needed
+            moveForwardUI.SetActive(true);
+            moveForwardText.text = "Do you want to move forward? Press 'O' to confirm."; // Update message as needed
             isAwaitingConfirmation = true;
         }
     }
 
-    private void HideConfirmationUI()
+    private void HideMoveForwardUI()
     {
-        if (confirmationUI != null)
+        if (moveForwardUI != null)
         {
-            confirmationUI.SetActive(false);
+            moveForwardUI.SetActive(false);
             isAwaitingConfirmation = false;
         }
     }
@@ -129,7 +165,7 @@ public class GameManager : MonoBehaviour
         if (isAwaitingConfirmation && (Input.GetKeyDown(KeyCode.O) || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)))
         {
             Debug.Log("Player confirmed scene transition.");
-            HideConfirmationUI();
+            HideMoveForwardUI();
             StartCoroutine(TransitionToNextScene(SceneManager.GetActiveScene().buildIndex + 1));
         }
     }
@@ -147,12 +183,7 @@ public class GameManager : MonoBehaviour
         // Wait for the scene to load before continuing
         yield return new WaitForSeconds(0.1f);
 
-        // Locate the new FadeImage in the scene after the scene transition
-        fadeImage = GameObject.FindWithTag("FadeImage")?.GetComponent<Image>();
-        if (fadeImage != null)
-        {
-            StartCoroutine(FadeIn()); // Fade in from black
-        }
+        LocateSceneElements(); // Re-locate UI elements after scene load
     }
 
     // Fade out to black

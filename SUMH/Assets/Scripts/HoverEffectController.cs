@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem; // Import InputSystem namespace for Gamepad support
+using TMPro;
+using UnityEngine.InputSystem;
 
 public class HoverEffectController : MonoBehaviour
 {
     [Header("UI Elements")]
-    public Image hoverCircle;
+    public TextMeshProUGUI hoverText; // Direct reference to the TextMeshProUGUI object
+    public Transform canvasTransform; // Parent canvas for hover text
+    public Image hoverCircle; // Hover circle image on the canvas
     public float hoverDistance = 5.0f;
     public LayerMask interactableLayer;
 
@@ -14,6 +17,16 @@ public class HoverEffectController : MonoBehaviour
     void Start()
     {
         mainCamera = Camera.main;
+
+        if (hoverText == null)
+        {
+            Debug.LogError("Hover Text is not assigned!");
+        }
+
+        if (canvasTransform == null)
+        {
+            Debug.LogError("Canvas Transform is not assigned!");
+        }
 
         if (hoverCircle == null)
         {
@@ -25,7 +38,15 @@ public class HoverEffectController : MonoBehaviour
             Debug.LogError("Main Camera is not found! Ensure it's tagged 'MainCamera'.");
         }
 
-        hoverCircle.enabled = false;
+        // Make sure the hover circle and text start as hidden
+        if (hoverCircle != null)
+        {
+            hoverCircle.enabled = false;
+        }
+        if (hoverText != null)
+        {
+            hoverText.gameObject.SetActive(false);
+        }
     }
 
     void Update()
@@ -36,26 +57,42 @@ public class HoverEffectController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, hoverDistance, interactableLayer))
         {
-            hoverCircle.enabled = true;
+            Interactable interactable = hit.collider.GetComponent<Interactable>();
 
-            if (hit.collider.CompareTag("Interactable"))
+            if (interactable != null && !interactable.hasBeenInteracted)
             {
-                Interactable interactable = hit.collider.GetComponent<Interactable>();
+                // Show hover circle
+                if (hoverCircle != null) hoverCircle.enabled = true;
 
-                if (interactable != null)
+                // Show hover text
+                if (hoverText != null)
                 {
-                    // Check for interaction via keyboard or controller
-                    if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
-                    {
-                        Debug.Log("Interaction triggered with " + hit.collider.gameObject.name);
-                        interactable.Interact();
-                    }
+                    hoverText.gameObject.SetActive(true);
+                    hoverText.text = "Press [X] to reflect"; // Replace with your desired text
                 }
+
+                // Check for interaction via keyboard or controller
+                if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
+                {
+                    interactable.Interact();
+
+                    // Hide hover text and circle after interaction
+                    if (hoverText != null) hoverText.gameObject.SetActive(false);
+                    if (hoverCircle != null) hoverCircle.enabled = false;
+                }
+            }
+            else
+            {
+                // Hide hover circle and text if the object has been interacted with
+                if (hoverCircle != null) hoverCircle.enabled = false;
+                if (hoverText != null) hoverText.gameObject.SetActive(false);
             }
         }
         else
         {
-            hoverCircle.enabled = false;
+            // Remove hover text and circle if not hovering over an interactable
+            if (hoverCircle != null) hoverCircle.enabled = false;
+            if (hoverText != null) hoverText.gameObject.SetActive(false);
         }
     }
 }
