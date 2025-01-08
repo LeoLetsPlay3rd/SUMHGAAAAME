@@ -16,7 +16,6 @@ public class GameManager : MonoBehaviour
 
     [Header("Fade Settings")]
     public float fadeDuration = 1f; // Duration for fade effect
-
     private Image fadeImage; // Reference to the fade UI image
 
     [Header("Confirmation UI")]
@@ -24,7 +23,7 @@ public class GameManager : MonoBehaviour
     private TMP_Text moveForwardText; // TextMeshPro text for the confirmation message
     private bool isAwaitingConfirmation = false; // Tracks if the confirmation is active
 
-    private bool isFirstScene = true; // Tracks if the player is in the first scene
+    private bool firstScene = true; // Tracks if this is the initial scene
 
     private void Awake()
     {
@@ -45,23 +44,38 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         LocateSceneElements(); // Locate UI elements like fade image and MoveForwardUI
+        ResetObjectInteractions(); // Reset interaction data when the scene starts
 
-        // Initialize the objectInteractions array if not set
-        if (objectInteractions == null || objectInteractions.Length == 0)
+        // Restore player position and rotation if not in the first scene
+        if (!firstScene)
         {
-            Debug.LogWarning("Object interactions array not set! Initializing with 5 default slots.");
-            objectInteractions = new bool[5]; // Default to 5 interactable objects
-        }
-
-        // Check if this is the first scene
-        if (SceneManager.GetActiveScene().name == "D_Phase_1")
-        {
-            isFirstScene = true;
+            RestorePlayerState();
         }
         else
         {
-            isFirstScene = false;
+            Debug.Log("Starting in the first scene. Player state will not be restored.");
         }
+
+        firstScene = false; // After the first scene, restoration will apply
+    }
+
+    private void ResetObjectInteractions()
+    {
+        // Reset total interactions
+        totalObjectsInteracted = 0;
+
+        // Reset the interaction tracking for the current scene
+        if (objectInteractions == null || objectInteractions.Length == 0)
+        {
+            objectInteractions = new bool[5]; // Default to 5 interactable objects
+        }
+
+        for (int i = 0; i < objectInteractions.Length; i++)
+        {
+            objectInteractions[i] = false;
+        }
+
+        Debug.Log("Object interactions and totalObjectsInteracted reset for the new scene.");
     }
 
     private void LocateSceneElements()
@@ -121,14 +135,22 @@ public class GameManager : MonoBehaviour
 
     public void SavePlayerState(GameObject player)
     {
-        playerPosition = player.transform.position;
-        playerRotation = player.transform.rotation;
-        Debug.Log($"Player state saved. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
+        if (player != null)
+        {
+            playerPosition = player.transform.position;
+            playerRotation = player.transform.rotation;
+            Debug.Log($"Player state saved. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
+        }
+        else
+        {
+            Debug.LogWarning("Player GameObject not found. Player state not saved.");
+        }
     }
 
-    public void RestorePlayerState(GameObject player)
+    public void RestorePlayerState()
     {
-        if (!isFirstScene) // Only restore position and rotation if not in the first scene
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null && (playerPosition != Vector3.zero || playerRotation != Quaternion.identity))
         {
             player.transform.position = playerPosition;
             player.transform.rotation = playerRotation;
@@ -136,7 +158,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Player position not restored because this is the first scene.");
+            Debug.Log("No saved player position or rotation to restore.");
         }
     }
 
@@ -170,7 +192,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Transition to the next scene with a fade effect
     public IEnumerator TransitionToNextScene(int nextSceneIndex)
     {
         if (fadeImage != null)
@@ -178,12 +199,13 @@ public class GameManager : MonoBehaviour
             yield return StartCoroutine(FadeOut()); // Fade out to black
         }
 
-        SceneManager.LoadScene(nextSceneIndex); // Load next scene
+        SceneManager.LoadScene(nextSceneIndex); // Load the next scene
 
         // Wait for the scene to load before continuing
         yield return new WaitForSeconds(0.1f);
 
         LocateSceneElements(); // Re-locate UI elements after scene load
+        ResetObjectInteractions(); // Reset object interactions for the new scene
     }
 
     // Fade out to black

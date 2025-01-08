@@ -8,6 +8,10 @@ TagManager:
   - Guitar
   - FadeImage
   - MoveForwardUI
+  - HoverCircle
+  - Canvas
+  - HoverText
+  - HoverUIParent
   layers:
   - Default
   - TransparentFX

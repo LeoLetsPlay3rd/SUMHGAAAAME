@@ -1,56 +1,86 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using UnityEngine.SceneManagement;
+using TMPro; // For TextMeshPro UI
 using UnityEngine.InputSystem;
 
 public class HoverEffectController : MonoBehaviour
 {
     [Header("UI Elements")]
-    public TextMeshProUGUI hoverText; // Direct reference to the TextMeshProUGUI object
-    public Transform canvasTransform; // Parent canvas for hover text
-    public Image hoverCircle; // Hover circle image on the canvas
+    private Image hoverCircle; // Hover circle image
+    private TMP_Text hoverText; // TextMeshPro UI element for hover text
+    private Transform canvasTransform; // Parent canvas for hover UI
+
+    [Header("Hover Settings")]
     public float hoverDistance = 5.0f;
     public LayerMask interactableLayer;
 
     private Camera mainCamera;
 
-    void Start()
+    private void Start()
     {
         mainCamera = Camera.main;
+        LocateUIElements(); // Dynamically locate UI elements
+    }
 
-        if (hoverText == null)
-        {
-            Debug.LogError("Hover Text is not assigned!");
-        }
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded; // Subscribe to scene load events
+    }
 
-        if (canvasTransform == null)
-        {
-            Debug.LogError("Canvas Transform is not assigned!");
-        }
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded; // Unsubscribe from scene load events
+    }
 
-        if (hoverCircle == null)
-        {
-            Debug.LogError("Hover Circle is not assigned!");
-        }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        LocateUIElements(); // Re-locate UI elements after scene load
+    }
 
-        if (mainCamera == null)
-        {
-            Debug.LogError("Main Camera is not found! Ensure it's tagged 'MainCamera'.");
-        }
+    private void LocateUIElements()
+    {
+        // Locate UI elements dynamically by their tags
+        hoverCircle = GameObject.FindWithTag("HoverCircle")?.GetComponent<Image>();
+        hoverText = GameObject.FindWithTag("HoverText")?.GetComponent<TMP_Text>();
+        canvasTransform = GameObject.FindWithTag("Canvas")?.transform;
 
-        // Make sure the hover circle and text start as hidden
+        // Ensure the UI elements are initially disabled
         if (hoverCircle != null)
         {
             hoverCircle.enabled = false;
         }
+
         if (hoverText != null)
         {
             hoverText.gameObject.SetActive(false);
         }
+
+        // Debug logs to verify references
+        if (hoverCircle == null)
+        {
+            Debug.LogWarning("HoverCircle is not assigned or found in the scene.");
+        }
+
+        if (hoverText == null)
+        {
+            Debug.LogWarning("HoverText is not assigned or found in the scene.");
+        }
+
+        if (canvasTransform == null)
+        {
+            Debug.LogWarning("CanvasTransform is not assigned or found in the scene.");
+        }
     }
 
-    void Update()
+    private void Update()
     {
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main Camera is not assigned or found in the scene.");
+            return;
+        }
+
         // Cast a ray from the center of the screen
         Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
         RaycastHit hit;
@@ -61,38 +91,48 @@ public class HoverEffectController : MonoBehaviour
 
             if (interactable != null && !interactable.hasBeenInteracted)
             {
-                // Show hover circle
-                if (hoverCircle != null) hoverCircle.enabled = true;
-
-                // Show hover text
-                if (hoverText != null)
+                // Enable hover UI elements
+                if (hoverCircle != null)
                 {
-                    hoverText.gameObject.SetActive(true);
-                    hoverText.text = "Press [X] to reflect"; // Replace with your desired text
+                    hoverCircle.enabled = true;
                 }
 
-                // Check for interaction via keyboard or controller
+                if (hoverText != null)
+                {
+                    hoverText.text = "Press X to Interact"; // Update hover text
+                    hoverText.gameObject.SetActive(true);
+                }
+
+                // Check for interaction input
                 if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
                 {
                     interactable.Interact();
 
-                    // Hide hover text and circle after interaction
-                    if (hoverText != null) hoverText.gameObject.SetActive(false);
-                    if (hoverCircle != null) hoverCircle.enabled = false;
+                    // Disable hover UI after interaction
+                    if (hoverCircle != null)
+                    {
+                        hoverCircle.enabled = false;
+                    }
+
+                    if (hoverText != null)
+                    {
+                        hoverText.gameObject.SetActive(false);
+                    }
                 }
-            }
-            else
-            {
-                // Hide hover circle and text if the object has been interacted with
-                if (hoverCircle != null) hoverCircle.enabled = false;
-                if (hoverText != null) hoverText.gameObject.SetActive(false);
             }
         }
         else
         {
-            // Remove hover text and circle if not hovering over an interactable
-            if (hoverCircle != null) hoverCircle.enabled = false;
-            if (hoverText != null) hoverText.gameObject.SetActive(false);
+            // Disable hover UI when not hovering over an interactable
+            if (hoverCircle != null)
+            {
+                hoverCircle.enabled = false;
+            }
+
+            if (hoverText != null)
+            {
+                hoverText.gameObject.SetActive(false);
+            }
         }
     }
 }
