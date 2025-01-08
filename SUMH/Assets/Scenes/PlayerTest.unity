@@ -614,9 +614,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 5
-  jumpForce: 5
   gravity: -9.81
-  mouseSensitivity: 100
+  sensitivity: 100
   controller: {fileID: 1023823174}
   cameraTransform: {fileID: 240985347}
 --- !u!143 &1023823174
@@ -672,7 +671,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86603597562100d44919e6fda5ba747f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseCircle: {fileID: 1665021297}
   hoverCircle: {fileID: 1751119749}
   hoverDistance: 9.3
   interactableLayer:
