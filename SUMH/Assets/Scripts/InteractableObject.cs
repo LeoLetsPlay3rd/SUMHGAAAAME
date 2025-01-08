@@ -3,14 +3,24 @@ using UnityEngine;
 public class InteractableObject : MonoBehaviour
 {
     public int objectIndex; // Unique index for this object
+    public CircleManager circleManager; // Reference to the CircleManager
 
     public void OnInteract()
     {
-        Debug.Log($"Interacted with: {gameObject.name} (Index: {objectIndex})");
+        // Update CircleManager
+        if (circleManager != null)
+        {
+            circleManager.RegisterInteraction();
+        }
+        else
+        {
+            Debug.LogError("CircleManager reference is missing!");
+        }
 
+        // Notify GameManager
         if (GameManager.Instance != null)
         {
-            Debug.Log("Notifying GameManager...");
+            Debug.Log($"Interacted with: {gameObject.name} (Index: {objectIndex})");
             GameManager.Instance.RegisterObjectInteraction(objectIndex);
         }
         else

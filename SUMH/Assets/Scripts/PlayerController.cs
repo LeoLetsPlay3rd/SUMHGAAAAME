@@ -8,7 +8,8 @@ public class PlayerController : MonoBehaviour
     public float gravity = -9.81f;
 
     [Header("Mouse/Controller Settings")]
-    public float sensitivity = 100f;
+    public float lookSensitivity = 150f; // Adjusted for faster look-around
+    public float smoothLookSpeed = 10f; // Smoothing for camera movement
 
     [Header("References")]
     public CharacterController controller;
@@ -24,9 +25,12 @@ public class PlayerController : MonoBehaviour
     private Vector2 moveInput;
     private Vector2 lookInput;
 
+    private Vector2 currentLook;
+    private Vector2 currentLookVelocity;
+
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.lockState = CursorLockMode.Locked; // Lock cursor for a focused game experience
     }
 
     void Update()
@@ -49,12 +53,19 @@ public class PlayerController : MonoBehaviour
     // Handles camera movement
     void HandleLook()
     {
-        float mouseX = lookInput.x * sensitivity * Time.deltaTime;
-        float mouseY = lookInput.y * sensitivity * Time.deltaTime;
+        // Smoothly interpolate look input
+        currentLook.x = Mathf.SmoothDamp(currentLook.x, lookInput.x, ref currentLookVelocity.x, 1f / smoothLookSpeed);
+        currentLook.y = Mathf.SmoothDamp(currentLook.y, lookInput.y, ref currentLookVelocity.y, 1f / smoothLookSpeed);
 
+        float mouseX = currentLook.x * lookSensitivity * Time.deltaTime;
+        float mouseY = currentLook.y * lookSensitivity * Time.deltaTime;
+
+        // Rotate the player (horizontal rotation)
         transform.Rotate(Vector3.up * mouseX);
+
+        // Rotate the camera (vertical rotation)
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f); // Prevent flipping the camera
         cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
@@ -66,7 +77,7 @@ public class PlayerController : MonoBehaviour
 
         if (controller.isGrounded && velocity.y < 0)
         {
-            velocity.y = -2f;
+            velocity.y = -2f; // Keep player grounded
         }
 
         velocity.y += gravity * Time.deltaTime;
