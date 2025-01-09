@@ -27,9 +27,9 @@ public class HoverTextDisplay : MonoBehaviour
         }
     }
 
+
     private void Update()
     {
-        // Ensure the main camera exists
         if (mainCamera == null)
         {
             Debug.LogError("Main Camera is not assigned or found in the scene.");
@@ -49,20 +49,29 @@ public class HoverTextDisplay : MonoBehaviour
                 // Enable interaction text
                 if (interactionText != null)
                 {
-                    interactionText.text = "Press (X) to reflect"; // Update interaction text
+                    interactionText.text = "Press (X) to reflect";
                     interactionText.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                // Ensure text is hidden if object has been interacted with
+                if (interactionText != null && interactable != null && interactable.hasBeenInteracted)
+                {
+                    interactionText.gameObject.SetActive(false);
                 }
             }
         }
         else
         {
-            // Disable interaction text when not hovering over an interactable
+            // Disable interaction text when no interactable is detected
             if (interactionText != null)
             {
                 interactionText.gameObject.SetActive(false);
             }
         }
     }
+
 
     public void HideInteractionText()
     {
