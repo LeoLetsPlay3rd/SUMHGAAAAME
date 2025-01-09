@@ -10,6 +10,19 @@ public class SceneController : MonoBehaviour
     private GameObject currentSelected; // The currently selected button
     private bool transitioningScene = false; // Flag for managing scene transitions
 
+    public Image fadeOverlay; // Reference to the fade overlay image
+    public float fadeDuration = 1f; // Duration of fade in/out effects
+
+    private void Start()
+    {
+        // Ensure the fade overlay is fully black at the start
+        if (fadeOverlay != null)
+        {
+            fadeOverlay.color = new Color(0f, 0f, 0f, 1f); // Fully opaque
+            StartCoroutine(FadeInScene()); // Begin fade-in
+        }
+    }
+
     void Update()
     {
         if (transitioningScene) return; // Skip input handling during transitions
@@ -81,14 +94,15 @@ public class SceneController : MonoBehaviour
     public void BeginSceneTransition(string nextSceneName, Image fadeOverlay)
     {
         if (transitioningScene) return; // Prevent multiple transitions
+        this.fadeOverlay = fadeOverlay; // Assign fadeOverlay to the class variable
         transitioningScene = true;
 
-        StartCoroutine(FadeOutSceneAndLoadNext(nextSceneName, fadeOverlay));
+        StartCoroutine(FadeOutSceneAndLoadNext(nextSceneName));
     }
 
-    private IEnumerator FadeOutSceneAndLoadNext(string nextSceneName, Image fadeOverlay)
+
+    private IEnumerator FadeOutSceneAndLoadNext(string nextSceneName)
     {
-        float fadeDuration = 1f; // Duration of the fade-out effect
         float elapsed = 0f;
 
         // Ensure the fade overlay is visible and starts transparent
@@ -99,7 +113,7 @@ public class SceneController : MonoBehaviour
             overlayColor.a = 0f;
             fadeOverlay.color = overlayColor;
 
-            // Fade in the overlay
+            // Fade in the overlay to black
             while (elapsed < fadeDuration)
             {
                 elapsed += Time.deltaTime;
@@ -111,5 +125,36 @@ public class SceneController : MonoBehaviour
 
         // Load the next scene
         SceneManager.LoadScene(nextSceneName);
+
+        // Wait for the scene to load
+        yield return new WaitForSeconds(0.1f);
+
+        // Begin fade-in for the new scene
+        if (fadeOverlay != null)
+        {
+            StartCoroutine(FadeInScene());
+        }
+    }
+
+    private IEnumerator FadeInScene()
+    {
+        float elapsed = 0f;
+
+        // Gradually fade the overlay from black to transparent
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            Color overlayColor = fadeOverlay.color;
+            overlayColor.a = Mathf.Lerp(1f, 0f, elapsed / fadeDuration); // Gradually decrease alpha
+            fadeOverlay.color = overlayColor;
+            yield return null;
+        }
+
+        // Ensure the overlay is fully transparent
+        if (fadeOverlay != null)
+        {
+            fadeOverlay.color = new Color(0f, 0f, 0f, 0f);
+            fadeOverlay.gameObject.SetActive(false); // Hide the overlay
+        }
     }
 }

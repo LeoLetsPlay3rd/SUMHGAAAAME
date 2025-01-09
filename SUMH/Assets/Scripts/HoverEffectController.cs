@@ -99,7 +99,7 @@ public class HoverEffectController : MonoBehaviour
 
                 if (hoverText != null)
                 {
-                    hoverText.text = "Press X to Interact"; // Update hover text
+                    hoverText.text = "Press (X) to reflect"; // Update hover text
                     hoverText.gameObject.SetActive(true);
                 }
 

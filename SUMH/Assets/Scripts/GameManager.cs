@@ -167,10 +167,33 @@ public class GameManager : MonoBehaviour
         if (moveForwardUI != null)
         {
             moveForwardUI.SetActive(true);
-            moveForwardText.text = "Do you want to move forward? Press 'O' to confirm."; // Update message as needed
+
+            // Find the HoverTextDisplay script and hide interaction text
+            HoverTextDisplay hoverTextDisplay = FindObjectOfType<HoverTextDisplay>();
+            if (hoverTextDisplay != null)
+            {
+                hoverTextDisplay.HideInteractionText();
+            }
+
+            // Clear any existing text before updating
+            moveForwardText.text = "";
+
+            // Update the text based on the current scene
+            string currentSceneName = SceneManager.GetActiveScene().name;
+            if (currentSceneName == "D_Phase_3")
+            {
+                moveForwardText.text = "Press (O) to continue";
+            }
+            else
+            {
+                moveForwardText.text = "Ready to move forward? Press (O)";
+            }
+
             isAwaitingConfirmation = true;
         }
     }
+
+
 
     private void HideMoveForwardUI()
     {
@@ -224,14 +247,24 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Fade in from black
     private IEnumerator FadeIn()
     {
+        // Default fade duration
+        float fadeInDuration = fadeDuration;
+
+        // Check if the current scene is D_Phase_1
+        if (SceneManager.GetActiveScene().name == "D_Phase_1")
+        {
+            fadeInDuration = fadeDuration * 2f; // Make the fade-in twice as long
+            Debug.Log("D_Phase_1 detected. Using a longer fade-in duration.");
+        }
+
         float elapsedTime = 0f;
-        while (elapsedTime < fadeDuration)
+
+        while (elapsedTime < fadeInDuration)
         {
             elapsedTime += Time.deltaTime;
-            float alpha = 1f - (elapsedTime / fadeDuration);
+            float alpha = 1f - (elapsedTime / fadeInDuration);
             if (fadeImage != null)
             {
                 fadeImage.color = new Color(0, 0, 0, alpha);
@@ -244,4 +277,5 @@ public class GameManager : MonoBehaviour
             fadeImage.color = new Color(0, 0, 0, 0); // Ensure fully transparent
         }
     }
+
 }

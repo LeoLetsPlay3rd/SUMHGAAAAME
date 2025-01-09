@@ -1,6 +1,5 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.InputSystem;
 
 public class HoverTextDisplay : MonoBehaviour
 {
@@ -53,18 +52,6 @@ public class HoverTextDisplay : MonoBehaviour
                     interactionText.text = "Press (X) to reflect"; // Update interaction text
                     interactionText.gameObject.SetActive(true);
                 }
-
-                // Check for interaction input
-                if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
-                {
-                    interactable.Interact();
-
-                    // Disable interaction text after interaction
-                    if (interactionText != null)
-                    {
-                        interactionText.gameObject.SetActive(false);
-                    }
-                }
             }
         }
         else
@@ -74,6 +61,14 @@ public class HoverTextDisplay : MonoBehaviour
             {
                 interactionText.gameObject.SetActive(false);
             }
+        }
+    }
+
+    public void HideInteractionText()
+    {
+        if (interactionText != null)
+        {
+            interactionText.gameObject.SetActive(false);
         }
     }
 }

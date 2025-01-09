@@ -14884,7 +14884,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86603597562100d44919e6fda5ba747f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hoverDistance: 2.5
+  hoverDistance: 2
   interactableLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -14906,7 +14906,7 @@ MonoBehaviour:
   smoothLookSpeed: 10
   controller: {fileID: 1113908350}
   cameraTransform: {fileID: 559101126}
-  interactionRange: 3
+  interactionRange: 2
   interactableLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -14943,14 +14943,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1113908346}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.26044446, z: -0, w: 0.96548885}
-  m_LocalPosition: {x: -3.641, y: -0.574, z: 3.958}
+  m_LocalRotation: {x: -0, y: -0.36049134, z: -0, w: 0.93276256}
+  m_LocalPosition: {x: -3.76, y: -0.574, z: 4.219}
   m_LocalScale: {x: 0.45, y: 0.45, z: 0.45}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 559101126}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: -30.193, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -42.261, z: 0}
 --- !u!114 &1113908352
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21785,7 +21785,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionText: {fileID: 1924606151}
-  hoverDistance: 2.5
+  hoverDistance: 2
   interactableLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -25870,7 +25870,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -153, y: 94}
+  m_AnchoredPosition: {x: -94, y: 66}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1975735738
@@ -25893,9 +25893,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Ready to move forward?
-
-    Press [O]'
+  m_text: Ready to move forward? Press (O)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e97547a283a5dcc47aea4a3f0d3f2df7, type: 2}
   m_sharedMaterial: {fileID: 729170007577565020, guid: e97547a283a5dcc47aea4a3f0d3f2df7, type: 2}
@@ -25960,7 +25958,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -406.73584, w: 0}
+  m_margin: {x: 0, y: 0, z: -263.807, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -27970,7 +27968,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2102552383}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29016,8 +29014,8 @@ GameObject:
   - component: {fileID: 923567284412169137}
   - component: {fileID: 2150890771959285643}
   - component: {fileID: 4549361836578064016}
-  - component: {fileID: 4549361836578064018}
   - component: {fileID: 4549361836578064017}
+  - component: {fileID: 4549361836578064018}
   - component: {fileID: 4549361836578064019}
   m_Layer: 6
   m_Name: Cube.024
@@ -29339,8 +29337,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.0349932, y: 2.8834906, z: 2.1179357}
-  m_Center: {x: 0.0000006058544, y: 0.41695324, z: 0.05896557}
+  m_Size: {x: 2.4347417, y: 3.5138352, z: 3.8878846}
+  m_Center: {x: -0.19987342, y: 0.7321275, z: 0.9439419}
 --- !u!114 &4549361836578064018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29775,8 +29773,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 145.05237, y: 36.058582, z: 104.20191}
-  m_Center: {x: 10.242066, y: -17.029291, z: -50.49885}
+  m_Size: {x: 86.926216, y: 35.834274, z: 83.77326}
+  m_Center: {x: -18.821045, y: -16.917131, z: -60.713154}
 --- !u!114 &6950676785418874246
 MonoBehaviour:
   m_ObjectHideFlags: 0
