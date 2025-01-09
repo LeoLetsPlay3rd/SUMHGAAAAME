@@ -5595,7 +5595,7 @@ MonoBehaviour:
   fadeOverlay: {fileID: 0}
   isFirstButton: 1
   loadingDelay: 2
-  pressTextTimeout: 1
+  pressTextTimeout: 2
   pressTextFadeDuration: 0.3
 --- !u!1 &1902568717
 GameObject:
