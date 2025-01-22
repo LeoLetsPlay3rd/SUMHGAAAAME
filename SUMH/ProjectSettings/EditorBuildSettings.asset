@@ -9,6 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Intro.unity
     guid: 7bf4ee6f5a0728f4db38c49b3488ed1f
   - enabled: 1
+    path: Assets/Scenes/D_Phase_Start.unity
+    guid: 249d88e490728664abd568e373fc55b3
+  - enabled: 1
+    path: Assets/Scenes/D_Phase_1 3.unity
+    guid: 01538f4206c75ee4c823149b2cceb199
+  - enabled: 1
     path: Assets/Scenes/D_Phase_1.unity
     guid: 9aac3dc36aaaeb74ebadc134a8dcb3b8
   - enabled: 1

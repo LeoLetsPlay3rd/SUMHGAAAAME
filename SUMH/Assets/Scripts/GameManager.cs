@@ -149,6 +149,15 @@ public class GameManager : MonoBehaviour
 
     public void RestorePlayerState()
     {
+        string previousSceneName = SceneManager.GetActiveScene().name; // Get the current scene name
+
+        // Skip restoring position/rotation if the previous scene is "thisName"
+        if (previousSceneName == "D_Phase_Start")
+        {
+            Debug.Log("Skipping player state restoration as the previous scene was 'thisName'.");
+            return; // Don't restore the position/rotation
+        }
+
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null && (playerPosition != Vector3.zero || playerRotation != Quaternion.identity))
         {
@@ -161,6 +170,7 @@ public class GameManager : MonoBehaviour
             Debug.Log("No saved player position or rotation to restore.");
         }
     }
+
 
     private void ShowMoveForwardUI()
     {
@@ -215,8 +225,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private string previousSceneName; // Add this as a global variable in the class
+
     public IEnumerator TransitionToNextScene(int nextSceneIndex)
     {
+        previousSceneName = SceneManager.GetActiveScene().name; // Save the current scene name
+
         if (fadeImage != null)
         {
             yield return StartCoroutine(FadeOut()); // Fade out to black
@@ -225,11 +239,17 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(nextSceneIndex); // Load the next scene
 
         // Wait for the scene to load before continuing
-        yield return new WaitForSeconds(0.1f);
+        yield return null;
 
         LocateSceneElements(); // Re-locate UI elements after scene load
-        ResetObjectInteractions(); // Reset object interactions for the new scene
+
+        // Trigger the fade-in for the new scene
+        if (fadeImage != null)
+        {
+            StartCoroutine(FadeIn());
+        }
     }
+
 
     // Fade out to black
     private IEnumerator FadeOut()
