@@ -50,7 +50,7 @@ public class CircleManager : MonoBehaviour
 
         switch (currentSceneName)
         {
-            case "D_Phase_1":
+            case "D_Phase_1 3":
                 return phase1Filled;
             case "D_Phase_2":
                 return phase2Filled;

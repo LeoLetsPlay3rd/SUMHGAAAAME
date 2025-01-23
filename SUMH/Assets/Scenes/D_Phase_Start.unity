@@ -7437,7 +7437,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 06:38
+  m_text: 05:17
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e96a9e509bcb9de45bf363de2dce659f, type: 2}
   m_sharedMaterial: {fileID: 514206045750935269, guid: e96a9e509bcb9de45bf363de2dce659f, type: 2}
@@ -7907,7 +7907,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectIndex: 2
-  circleManager: {fileID: 0}
+  circleManager: {fileID: 1325522401}
 --- !u!114 &1291792022
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7920,7 +7920,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 108e298bb5c7c384ca7e87a0be67b863, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text3D: {fileID: 0}
+  text3D: {fileID: 168235623}
   hasBeenInteracted: 0
 --- !u!65 &1291792023
 BoxCollider:
