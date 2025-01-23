@@ -23,8 +23,6 @@ public class GameManager : MonoBehaviour
     private TMP_Text moveForwardText; // TextMeshPro text for the confirmation message
     private bool isAwaitingConfirmation = false; // Tracks if the confirmation is active
 
-    private bool firstScene = true; // Tracks if this is the initial scene
-
     private void Awake()
     {
         // Singleton setup
@@ -41,30 +39,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Start()
+    void Start()
     {
-        LocateSceneElements(); // Locate UI elements like fade image and MoveForwardUI
-        ResetObjectInteractions(); // Reset interaction data when the scene starts
+        GameObject player = GameObject.FindWithTag("Player");
 
-        // Restore player position and rotation if not in the first scene
-        if (!firstScene)
+        if (player != null)
         {
-            RestorePlayerState();
+            string currentSceneName = SceneManager.GetActiveScene().name;
+
+            if (currentSceneName != "D_Phase_Start" && currentSceneName != "D_Phase_1")
+            {
+                DontDestroyOnLoad(player);
+                Debug.Log("Player marked as DontDestroyOnLoad for subsequent levels.");
+            }
         }
         else
         {
-            Debug.Log("Starting in the first scene. Player state will not be restored.");
+            Debug.LogWarning("No player object found in this scene. Make sure a player is placed in the scene.");
         }
-
-        firstScene = false; // After the first scene, restoration will apply
     }
+
 
     private void ResetObjectInteractions()
     {
-        // Reset total interactions
         totalObjectsInteracted = 0;
 
-        // Reset the interaction tracking for the current scene
         if (objectInteractions == null || objectInteractions.Length == 0)
         {
             objectInteractions = new bool[5]; // Default to 5 interactable objects
@@ -80,7 +79,6 @@ public class GameManager : MonoBehaviour
 
     private void LocateSceneElements()
     {
-        // Locate the FadeImage in the scene by its tag
         fadeImage = GameObject.FindWithTag("FadeImage")?.GetComponent<Image>();
 
         if (fadeImage == null)
@@ -93,7 +91,6 @@ public class GameManager : MonoBehaviour
             StartCoroutine(FadeIn());
         }
 
-        // Locate the MoveForwardUI in the scene by its tag
         moveForwardUI = GameObject.FindWithTag("MoveForwardUI");
         if (moveForwardUI != null)
         {
@@ -110,26 +107,19 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"RegisterObjectInteraction called for Index: {objectIndex}");
 
-        // If this object hasn't been interacted with
         if (!objectInteractions[objectIndex])
         {
             objectInteractions[objectIndex] = true; // Mark as interacted
-            Debug.Log($"Object {objectIndex} marked as interacted.");
             totalObjectsInteracted++;
 
             Debug.Log($"Total interactions: {totalObjectsInteracted} / {objectInteractions.Length}");
 
-            // If all objects are interacted with, save position and show MoveForwardUI
             if (totalObjectsInteracted == objectInteractions.Length)
             {
                 Debug.Log("All objects interacted with! Saving player position...");
                 SavePlayerState(GameObject.FindWithTag("Player")); // Save player position and rotation
                 ShowMoveForwardUI(); // Show MoveForwardUI
             }
-        }
-        else
-        {
-            Debug.Log($"Object {objectIndex} was already interacted with.");
         }
     }
 
@@ -141,36 +131,28 @@ public class GameManager : MonoBehaviour
             playerRotation = player.transform.rotation;
             Debug.Log($"Player state saved. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
         }
-        else
-        {
-            Debug.LogWarning("Player GameObject not found. Player state not saved.");
-        }
     }
 
     public void RestorePlayerState()
     {
-        string previousSceneName = SceneManager.GetActiveScene().name; // Get the current scene name
-
-        // Skip restoring position/rotation if the previous scene is "thisName"
-        if (previousSceneName == "D_Phase_Start")
-        {
-            Debug.Log("Skipping player state restoration as the previous scene was 'thisName'.");
-            return; // Don't restore the position/rotation
-        }
-
         GameObject player = GameObject.FindWithTag("Player");
-        if (player != null && (playerPosition != Vector3.zero || playerRotation != Quaternion.identity))
+
+        if (player != null)
         {
-            player.transform.position = playerPosition;
-            player.transform.rotation = playerRotation;
-            Debug.Log($"Player state restored. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
-        }
-        else
-        {
-            Debug.Log("No saved player position or rotation to restore.");
+            if (playerPosition != Vector3.zero || playerRotation != Quaternion.identity)
+            {
+                player.transform.position = playerPosition;
+                player.transform.rotation = playerRotation;
+                Debug.Log($"Player state restored. Position: {playerPosition}, Rotation: {playerRotation.eulerAngles}");
+            }
+            else
+            {
+                Debug.LogWarning("No saved player state found. Placing player at a default position.");
+                player.transform.position = new Vector3(0, 1, 0); // Default position
+                player.transform.rotation = Quaternion.identity;
+            }
         }
     }
-
 
     private void ShowMoveForwardUI()
     {
@@ -178,32 +160,11 @@ public class GameManager : MonoBehaviour
         {
             moveForwardUI.SetActive(true);
 
-            // Find the HoverTextDisplay script and hide interaction text
-            HoverTextDisplay hoverTextDisplay = FindObjectOfType<HoverTextDisplay>();
-            if (hoverTextDisplay != null)
-            {
-                hoverTextDisplay.HideInteractionText();
-            }
-
-            // Clear any existing text before updating
-            moveForwardText.text = "";
-
-            // Update the text based on the current scene
-            string currentSceneName = SceneManager.GetActiveScene().name;
-            if (currentSceneName == "D_Phase_3")
-            {
-                moveForwardText.text = "Press (O) to continue";
-            }
-            else
-            {
-                moveForwardText.text = "Ready to move forward? Press (O)";
-            }
+            moveForwardText.text = "Press (O) to continue";
 
             isAwaitingConfirmation = true;
         }
     }
-
-
 
     private void HideMoveForwardUI()
     {
@@ -216,7 +177,6 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        // Handle confirmation input
         if (isAwaitingConfirmation && (Input.GetKeyDown(KeyCode.O) || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)))
         {
             Debug.Log("Player confirmed scene transition.");
@@ -225,25 +185,32 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private string previousSceneName; // Add this as a global variable in the class
-
     public IEnumerator TransitionToNextScene(int nextSceneIndex)
     {
-        previousSceneName = SceneManager.GetActiveScene().name; // Save the current scene name
+        string currentSceneName = SceneManager.GetActiveScene().name;
 
         if (fadeImage != null)
         {
-            yield return StartCoroutine(FadeOut()); // Fade out to black
+            yield return StartCoroutine(FadeOut());
         }
 
-        SceneManager.LoadScene(nextSceneIndex); // Load the next scene
+        if (currentSceneName == "D_Phase_Start")
+        {
+            // Destroy any remaining player objects in the start scene
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject player in players)
+            {
+                Debug.Log($"Destroying player object: {player.name}");
+                Destroy(player);
+            }
+        }
 
-        // Wait for the scene to load before continuing
+        SceneManager.LoadScene(nextSceneIndex);
+
         yield return null;
 
-        LocateSceneElements(); // Re-locate UI elements after scene load
+        LocateSceneElements();
 
-        // Trigger the fade-in for the new scene
         if (fadeImage != null)
         {
             StartCoroutine(FadeIn());
@@ -251,7 +218,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    // Fade out to black
+
     private IEnumerator FadeOut()
     {
         float elapsedTime = 0f;
@@ -269,22 +236,12 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator FadeIn()
     {
-        // Default fade duration
-        float fadeInDuration = fadeDuration;
-
-        // Check if the current scene is D_Phase_1
-        if (SceneManager.GetActiveScene().name == "D_Phase_1")
-        {
-            fadeInDuration = fadeDuration * 2f; // Make the fade-in twice as long
-            Debug.Log("D_Phase_1 detected. Using a longer fade-in duration.");
-        }
-
         float elapsedTime = 0f;
 
-        while (elapsedTime < fadeInDuration)
+        while (elapsedTime < fadeDuration)
         {
             elapsedTime += Time.deltaTime;
-            float alpha = 1f - (elapsedTime / fadeInDuration);
+            float alpha = 1f - (elapsedTime / fadeDuration);
             if (fadeImage != null)
             {
                 fadeImage.color = new Color(0, 0, 0, alpha);
@@ -294,8 +251,7 @@ public class GameManager : MonoBehaviour
 
         if (fadeImage != null)
         {
-            fadeImage.color = new Color(0, 0, 0, 0); // Ensure fully transparent
+            fadeImage.color = new Color(0, 0, 0, 0);
         }
     }
-
 }

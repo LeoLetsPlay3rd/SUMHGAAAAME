@@ -110,10 +110,15 @@ public class StartingSceneManager : MonoBehaviour
             yield return StartCoroutine(FadeOut()); // Fade out to black
         }
 
+        // Reset the player's camera rotation and position here, while the screen is black
+        if (playerCamera != null)
+        {
+            playerCamera.localRotation = Quaternion.identity; // Reset camera rotation
+            currentRotation = Vector2.zero; // Reset stored rotation
+            Debug.Log("Camera rotation reset after fade-out.");
+        }
+
         // Load the next scene
         SceneManager.LoadScene(nextSceneIndex);
-
-        // Let the new scene's manager handle fade-in
     }
-
 }
