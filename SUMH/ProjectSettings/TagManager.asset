@@ -12,6 +12,7 @@ TagManager:
   - Canvas
   - HoverText
   - HoverUIParent
+  - GameManager
   layers:
   - Default
   - TransparentFX

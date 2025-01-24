@@ -7,29 +7,28 @@ using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance; // Singleton instance for global access
+    public static GameManager Instance; // Singleton instance
 
-    public bool[] objectInteractions; // Tracks if objects have been interacted with
-    public Vector3 playerPosition; // Stores the player's position
-    public Quaternion playerRotation; // Stores the player's rotation
-    private int totalObjectsInteracted = 0; // Counts total interactions
+    public bool[] objectInteractions; // Tracks object interactions
+    public Vector3 playerPosition; // Player position
+    public Quaternion playerRotation; // Player rotation
+    private int totalObjectsInteracted = 0; // Interaction count
 
     [Header("Fade Settings")]
-    public float fadeDuration = 1f; // Duration for fade effect
-    private Image fadeImage; // Reference to the fade UI image
+    public float fadeDuration = 1f; // Fade duration
+    private Image fadeImage; // Fade image reference
 
     [Header("Confirmation UI")]
-    private GameObject moveForwardUI; // UI Canvas/GameObject for confirmation
-    private TMP_Text moveForwardText; // TextMeshPro text for the confirmation message
-    private bool isAwaitingConfirmation = false; // Tracks if the confirmation is active
+    private GameObject moveForwardUI; // Move forward UI reference
+    private TMP_Text moveForwardText; // Move forward message
+    private bool isAwaitingConfirmation = false; // Confirmation state
 
     private void Awake()
     {
-        // Singleton setup
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Ensures this object persists across scenes
+            DontDestroyOnLoad(gameObject);
             Debug.Log("GameManager initialized and set to persist.");
         }
         else if (Instance != this)
@@ -39,26 +38,39 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void Start()
+    private void Start()
     {
-        GameObject player = GameObject.FindWithTag("Player");
+        LocateSceneElements();
+        HandleDontDestroyOnLoadObjectsForPhase1_3();
+    }
 
-        if (player != null)
-        {
-            string currentSceneName = SceneManager.GetActiveScene().name;
+    /// <summary>
+    /// Handles the cleaning of non-essential objects when transitioning to D_Phase_1_3.
+    /// </summary>
+    private void HandleDontDestroyOnLoadObjectsForPhase1_3()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
 
-            if (currentSceneName != "D_Phase_Start" && currentSceneName != "D_Phase_1")
-            {
-                DontDestroyOnLoad(player);
-                Debug.Log("Player marked as DontDestroyOnLoad for subsequent levels.");
-            }
-        }
-        else
+        if (currentSceneName == "D_Phase_1_3")
         {
-            Debug.LogWarning("No player object found in this scene. Make sure a player is placed in the scene.");
+            Debug.Log("Transitioning to D_Phase_1_3. Cleaning up persistent objects...");
+            DestroyAllDontDestroyOnLoadObjects(); // Clean up all persistent objects except GameManager
         }
     }
 
+    private void DestroyAllDontDestroyOnLoadObjects()
+    {
+        GameObject[] dontDestroyObjects = FindObjectsOfType<GameObject>();
+
+        foreach (var obj in dontDestroyObjects)
+        {
+            if (obj.scene.name == null && obj != gameObject) // Exclude GameManager itself
+            {
+                Debug.Log($"Destroying object: {obj.name}");
+                Destroy(obj);
+            }
+        }
+    }
 
     private void ResetObjectInteractions()
     {
@@ -66,7 +78,7 @@ public class GameManager : MonoBehaviour
 
         if (objectInteractions == null || objectInteractions.Length == 0)
         {
-            objectInteractions = new bool[5]; // Default to 5 interactable objects
+            objectInteractions = new bool[5];
         }
 
         for (int i = 0; i < objectInteractions.Length; i++)
@@ -74,51 +86,48 @@ public class GameManager : MonoBehaviour
             objectInteractions[i] = false;
         }
 
-        Debug.Log("Object interactions and totalObjectsInteracted reset for the new scene.");
+        Debug.Log("Object interactions and totalObjectsInteracted reset.");
     }
 
     private void LocateSceneElements()
     {
         fadeImage = GameObject.FindWithTag("FadeImage")?.GetComponent<Image>();
-
         if (fadeImage == null)
         {
-            Debug.LogWarning("FadeImage not found in the scene. Ensure an Image with the 'FadeImage' tag exists.");
+            Debug.LogWarning("FadeImage not found. Ensure it exists in the scene.");
         }
         else
         {
-            fadeImage.color = new Color(0, 0, 0, 1); // Fully black at the start
+            fadeImage.color = new Color(0, 0, 0, 1);
             StartCoroutine(FadeIn());
+            Debug.Log("FadeImage located and initialized.");
         }
 
         moveForwardUI = GameObject.FindWithTag("MoveForwardUI");
         if (moveForwardUI != null)
         {
-            moveForwardText = moveForwardUI.GetComponentInChildren<TMP_Text>();
-            moveForwardUI.SetActive(false); // Hide it initially
+            moveForwardUI.SetActive(false);
+            Debug.Log("MoveForwardUI located and hidden at start.");
         }
         else
         {
-            Debug.LogWarning("MoveForwardUI not found in the scene. Ensure a GameObject with the 'MoveForwardUI' tag exists.");
+            Debug.LogWarning("MoveForwardUI not found. Ensure it exists in the scene.");
         }
     }
 
     public void RegisterObjectInteraction(int objectIndex)
     {
-        Debug.Log($"RegisterObjectInteraction called for Index: {objectIndex}");
-
         if (!objectInteractions[objectIndex])
         {
-            objectInteractions[objectIndex] = true; // Mark as interacted
+            objectInteractions[objectIndex] = true;
             totalObjectsInteracted++;
 
             Debug.Log($"Total interactions: {totalObjectsInteracted} / {objectInteractions.Length}");
 
             if (totalObjectsInteracted == objectInteractions.Length)
             {
-                Debug.Log("All objects interacted with! Saving player position...");
-                SavePlayerState(GameObject.FindWithTag("Player")); // Save player position and rotation
-                ShowMoveForwardUI(); // Show MoveForwardUI
+                Debug.Log("All objects interacted with! Showing MoveForwardUI.");
+                ShowMoveForwardUI();
             }
         }
     }
@@ -147,9 +156,9 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("No saved player state found. Placing player at a default position.");
-                player.transform.position = new Vector3(0, 1, 0); // Default position
+                player.transform.position = new Vector3(0, 1, 0);
                 player.transform.rotation = Quaternion.identity;
+                Debug.LogWarning("No saved player state found. Placing player at a default position.");
             }
         }
     }
@@ -160,9 +169,36 @@ public class GameManager : MonoBehaviour
         {
             moveForwardUI.SetActive(true);
 
-            moveForwardText.text = "Press (O) to continue";
+            // Find the HoverTextDisplay script and hide interaction text
+            HoverTextDisplay hoverTextDisplay = FindObjectOfType<HoverTextDisplay>();
+            if (hoverTextDisplay != null)
+            {
+                hoverTextDisplay.HideInteractionText();
+            }
+
+            // Clear any existing text before updating
+            if (moveForwardText != null)
+            {
+                moveForwardText.text = "";
+
+                // Update the text based on the current scene
+                string currentSceneName = SceneManager.GetActiveScene().name;
+                if (currentSceneName == "D_Phase_3")
+                {
+                    moveForwardText.text = "Press (O) to continue";
+                }
+                else
+                {
+                    moveForwardText.text = "Ready to move forward? Press (O)";
+                }
+            }
 
             isAwaitingConfirmation = true;
+            Debug.Log($"MoveForwardUI is now visible with text: {moveForwardText?.text}");
+        }
+        else
+        {
+            Debug.LogWarning("MoveForwardUI is not assigned or missing in the scene.");
         }
     }
 
@@ -172,12 +208,17 @@ public class GameManager : MonoBehaviour
         {
             moveForwardUI.SetActive(false);
             isAwaitingConfirmation = false;
+            Debug.Log("MoveForwardUI is now hidden.");
+        }
+        else
+        {
+            Debug.LogWarning("MoveForwardUI is not assigned!");
         }
     }
 
     private void Update()
     {
-        if (isAwaitingConfirmation && (Input.GetKeyDown(KeyCode.O) || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)))
+        if (isAwaitingConfirmation && (Input.GetKeyDown(KeyCode.O) || (Gamepad.current?.buttonEast.wasPressedThisFrame == true)))
         {
             Debug.Log("Player confirmed scene transition.");
             HideMoveForwardUI();
@@ -187,23 +228,12 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator TransitionToNextScene(int nextSceneIndex)
     {
-        string currentSceneName = SceneManager.GetActiveScene().name;
-
         if (fadeImage != null)
         {
             yield return StartCoroutine(FadeOut());
         }
 
-        if (currentSceneName == "D_Phase_Start")
-        {
-            // Destroy any remaining player objects in the start scene
-            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-            foreach (GameObject player in players)
-            {
-                Debug.Log($"Destroying player object: {player.name}");
-                Destroy(player);
-            }
-        }
+        ResetObjectInteractions();
 
         SceneManager.LoadScene(nextSceneIndex);
 
@@ -216,8 +246,6 @@ public class GameManager : MonoBehaviour
             StartCoroutine(FadeIn());
         }
     }
-
-
 
     private IEnumerator FadeOut()
     {

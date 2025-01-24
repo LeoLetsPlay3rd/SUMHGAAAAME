@@ -1,8 +1,9 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-using System.Collections;
 
 public class StartingSceneManager : MonoBehaviour
 {
@@ -15,7 +16,15 @@ public class StartingSceneManager : MonoBehaviour
     public Vector2 lookConstraints = new Vector2(45f, 45f); // Look constraints (vertical, horizontal)
     public float lookSensitivity = 2f; // Sensitivity for looking around
 
+    [Header("Text Prompts")]
+    public TextMeshProUGUI lookAroundText; // "Use (R) to look around" text
+    public TextMeshProUGUI pressXText; // "Press (X) to get up" text
+    public float textFadeDuration = 1f; // Duration of text fade-in
+    public float textDisplayDelay = 2f; // Delay before the "Use (R)" text fades in
+
     private Vector2 currentRotation; // Tracks the current rotation of the camera
+    private bool hasLookedAround = false; // Tracks if the player has looked around
+    private bool pressXPromptShown = false; // Tracks if the "Press (X)" prompt has been shown
 
     private void Start()
     {
@@ -25,6 +34,21 @@ public class StartingSceneManager : MonoBehaviour
             fadeImage.color = new Color(0, 0, 0, 1);
             StartCoroutine(FadeIn());
         }
+
+        // Start with the texts invisible
+        if (lookAroundText != null)
+        {
+            lookAroundText.alpha = 0f; // Invisible at start
+            lookAroundText.gameObject.SetActive(false); // Disable the object
+        }
+        if (pressXText != null)
+        {
+            pressXText.alpha = 0f; // Invisible at start
+            pressXText.gameObject.SetActive(false); // Disable the object
+        }
+
+        // Start showing the "Use (R)" prompt after a delay
+        StartCoroutine(ShowLookAroundPrompt());
     }
 
     private void Update()
@@ -40,8 +64,28 @@ public class StartingSceneManager : MonoBehaviour
             lookInput = new Vector2(Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y"));
         }
 
-        // Pass the input to HandleLookAround
-        HandleLookAround(lookInput);
+        // Handle looking around
+        if (lookInput != Vector2.zero)
+        {
+            HandleLookAround(lookInput);
+
+            // If the player has looked around, disable the "Use (R)" prompt
+            if (!hasLookedAround)
+            {
+                hasLookedAround = true;
+                StopCoroutine(ShowLookAroundPrompt());
+                if (lookAroundText != null)
+                {
+                    StartCoroutine(FadeOutTMPText(lookAroundText));
+                }
+
+                // Show the "Press (X)" prompt after looking around
+                if (!pressXPromptShown)
+                {
+                    StartCoroutine(ShowPressXPrompt());
+                }
+            }
+        }
 
         // Check for the "X" button press (keyboard or controller)
         if (Input.GetKeyDown(KeyCode.X) || (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame))
@@ -110,15 +154,64 @@ public class StartingSceneManager : MonoBehaviour
             yield return StartCoroutine(FadeOut()); // Fade out to black
         }
 
-        // Reset the player's camera rotation and position here, while the screen is black
         if (playerCamera != null)
         {
             playerCamera.localRotation = Quaternion.identity; // Reset camera rotation
             currentRotation = Vector2.zero; // Reset stored rotation
-            Debug.Log("Camera rotation reset after fade-out.");
         }
 
-        // Load the next scene
         SceneManager.LoadScene(nextSceneIndex);
+    }
+
+    private IEnumerator ShowLookAroundPrompt()
+    {
+        yield return new WaitForSeconds(textDisplayDelay);
+
+        if (!hasLookedAround && lookAroundText != null)
+        {
+            lookAroundText.gameObject.SetActive(true);
+            yield return StartCoroutine(FadeInTMPText(lookAroundText));
+        }
+    }
+
+    private IEnumerator ShowPressXPrompt()
+    {
+        pressXPromptShown = true;
+
+        // Wait 2 seconds after the "Use (R)" text fades out
+        yield return new WaitForSeconds(2f);
+
+        if (pressXText != null)
+        {
+            pressXText.gameObject.SetActive(true);
+            yield return StartCoroutine(FadeInTMPText(pressXText));
+        }
+    }
+
+    private IEnumerator FadeInTMPText(TextMeshProUGUI text)
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < textFadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            text.alpha = Mathf.Lerp(0f, 1f, elapsedTime / textFadeDuration);
+            yield return null;
+        }
+
+        text.alpha = 1f;
+    }
+
+    private IEnumerator FadeOutTMPText(TextMeshProUGUI text)
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < textFadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            text.alpha = Mathf.Lerp(1f, 0f, elapsedTime / textFadeDuration);
+            yield return null;
+        }
+
+        text.alpha = 0f;
+        text.gameObject.SetActive(false);
     }
 }

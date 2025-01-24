@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
+
 
 public class PersistentPlayer : MonoBehaviour
 {
@@ -39,6 +41,7 @@ public class PersistentPlayer : MonoBehaviour
         if (scene.name == "D_Phase_1 3")
         {
             ResetPlayerState();
+            EnablePlayerComponents();
         }
     }
 
@@ -52,20 +55,42 @@ public class PersistentPlayer : MonoBehaviour
         // Override rotation completely
         transform.rotation = Quaternion.identity; // Reset to no rotation
         transform.rotation = Quaternion.Euler(defaultRotationForPhase1); // Apply the desired rotation
+    }
 
-        // Enable all disabled components (example for Rigidbody and Collider)
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null)
+    private void EnablePlayerComponents()
+    {
+        Debug.Log("Enabling player components...");
+
+        // Enable PlayerController
+        PlayerController playerController = GetComponent<PlayerController>();
+        if (playerController != null)
         {
-            rb.isKinematic = false; // Enable Rigidbody
+            playerController.enabled = true;
+            Debug.Log("PlayerController enabled.");
         }
 
-        Collider col = GetComponent<Collider>();
-        if (col != null)
+        // Enable InputSystem actions
+        PlayerInput playerInput = GetComponent<PlayerInput>();
+        if (playerInput != null)
         {
-            col.enabled = true; // Enable Collider
+            playerInput.enabled = true;
+            Debug.Log("PlayerInput enabled.");
         }
 
-        Debug.Log($"Player state has been reset. Position: {transform.position}, Rotation: {transform.rotation.eulerAngles}");
+        // Enable any other components as needed
+        HoverEffectController hoverEffectController = GetComponent<HoverEffectController>();
+        if (hoverEffectController != null)
+        {
+            hoverEffectController.enabled = true;
+            Debug.Log("HoverEffectController enabled.");
+        }
+
+        // Example: Enable a Character Controller
+        CharacterController characterController = GetComponent<CharacterController>();
+        if (characterController != null)
+        {
+            characterController.enabled = true;
+            Debug.Log("CharacterController enabled.");
+        }
     }
 }

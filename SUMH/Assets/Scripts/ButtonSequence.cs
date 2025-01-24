@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.InputSystem;
 
 public class ButtonSequence : MonoBehaviour
 {
@@ -35,31 +36,36 @@ public class ButtonSequence : MonoBehaviour
 
         if (isFirstButton)
         {
-            // For the first button, wait until everything is loaded
             StartCoroutine(WaitForLoadingAndFadeIn());
         }
         else
         {
-            // For other buttons, fade in immediately
             StartCoroutine(FadeInText());
+        }
+    }
+
+    void Update()
+    {
+        // Detect Gamepad X Button (South Button) or Keyboard X Key for button interaction
+        if (isClickable && !buttonClicked &&
+            ((Gamepad.current?.buttonSouth.wasPressedThisFrame == true) ||
+             (Keyboard.current?.xKey.wasPressedThisFrame == true)))
+        {
+            OnButtonClick();
         }
     }
 
     IEnumerator WaitForLoadingAndFadeIn()
     {
-        // Wait for the specified loading delay
         yield return new WaitForSeconds(loadingDelay);
-
-        // Begin fading in the first button
         StartCoroutine(FadeInText());
     }
 
     IEnumerator FadeInText()
     {
-        float fadeDuration = 1f; // Duration of the fade-in
+        float fadeDuration = 1f;
         float elapsed = 0f;
 
-        // Gradually fade in the button text
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
@@ -67,28 +73,21 @@ public class ButtonSequence : MonoBehaviour
             yield return null;
         }
 
-        // Ensure the text is fully visible
         buttonText.alpha = 1f;
 
-        // Calculate delay based on the text length
-        float delayPerCharacter = 0.02f; // Delay per character in seconds
-        int textLength = buttonText.text.Length; // Number of characters in the text
-        float underlineDelay = textLength * delayPerCharacter; // Total delay
+        float delayPerCharacter = 0.02f;
+        float underlineDelay = buttonText.text.Length * delayPerCharacter;
         yield return new WaitForSeconds(underlineDelay);
 
-        // Add underline to the button text
         buttonText.fontStyle |= FontStyles.Underline;
 
-        // Enable the button for interaction
         isClickable = true;
 
-        // Start a timeout for showing "Press (X)" AFTER the button is fully visible
         StartCoroutine(ShowPressTextAfterTimeout());
     }
 
     IEnumerator ShowPressTextAfterTimeout()
     {
-        // Wait for the timeout period only after the button has fully appeared
         float elapsed = 0f;
         while (elapsed < pressTextTimeout && !buttonClicked)
         {
@@ -96,7 +95,6 @@ public class ButtonSequence : MonoBehaviour
             yield return null;
         }
 
-        // If the button hasn't been clicked, fade in "Press (X)"
         if (!buttonClicked && pressText != null)
         {
             StartCoroutine(FadeInPressText());
@@ -106,8 +104,6 @@ public class ButtonSequence : MonoBehaviour
     IEnumerator FadeInPressText()
     {
         float elapsed = 0f;
-
-        // Gradually fade in the "Press (X)" text
         while (elapsed < pressTextFadeDuration)
         {
             elapsed += Time.deltaTime;
@@ -115,27 +111,27 @@ public class ButtonSequence : MonoBehaviour
             yield return null;
         }
 
-        pressText.alpha = 1f; // Ensure full visibility
+        pressText.alpha = 1f;
     }
 
     public void OnButtonClick()
     {
-        if (!isClickable) return; // Ignore clicks if the button is not clickable
+        if (!isClickable) return;
 
-        buttonClicked = true; // Mark the button as clicked
+        buttonClicked = true;
 
         if (nextButton != null)
         {
-            // Fade out the current button and activate the next one
             StartCoroutine(FadeOutAndActivateNext());
         }
         else if (!string.IsNullOrEmpty(nextSceneName))
         {
-            // Delegate scene transition to the SceneController
+            // Delegate scene transition to SceneController
             SceneController sceneController = FindObjectOfType<SceneController>();
             if (sceneController != null)
             {
-                sceneController.BeginSceneTransition(nextSceneName, fadeOverlay); // Pass both parameters
+                // Let SceneController handle the fade and scene transition
+                sceneController.BeginSceneTransition(nextSceneName);
             }
             else
             {
@@ -146,10 +142,9 @@ public class ButtonSequence : MonoBehaviour
 
     IEnumerator FadeOutAndActivateNext()
     {
-        float fadeDuration = 0.5f; // Duration of the fade-out
+        float fadeDuration = 0.5f;
         float elapsed = 0f;
 
-        // Gradually fade out the button text and "Press (X)"
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
@@ -161,17 +156,14 @@ public class ButtonSequence : MonoBehaviour
             yield return null;
         }
 
-        // Ensure the text is fully invisible
         buttonText.alpha = 0f;
         if (pressText != null)
         {
             pressText.alpha = 0f;
         }
 
-        // Deactivate the current button
         gameObject.SetActive(false);
 
-        // Activate the next button (if it exists)
         if (nextButton != null)
         {
             nextButton.gameObject.SetActive(true);
